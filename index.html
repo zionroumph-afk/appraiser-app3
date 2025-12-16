@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Product Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .photo-upload {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .photo-upload:hover {
+            background-color: #eef0ff;
+            border-color: #5568d3;
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        .photo-upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .photo-preview-item {
+            position: relative;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .remove-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .result-section {
+            margin-bottom: 18px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-section:last-child {
+            border-bottom: none;
+        }
+
+        .result-section strong {
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .result-section p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #1976d2;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .webhook-setup {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .webhook-setup strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .webhook-setup p {
+            color: #856404;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Product Analyzer</h1>
+        <p class="subtitle">Upload product images and get instant AI-powered pricing analysis</p>
+
+        <div class="card">
+            <h2>Upload Product Images</h2>
+            
+            <div class="webhook-setup">
+                <strong>⚠️ Setup Required:</strong>
+                <p>This app needs a Make.com scenario to work. After you upload this to GitHub, I'll give you step-by-step instructions to set up Make.com so it can analyze your images and return results.</p>
+            </div>
+
+            <div class="info-box">
+                <p><strong>How to use:</strong></p>
+                <p>1. Upload 1-5 clear product photos</p>
+                <p>2. Add optional details about the product</p>
+                <p>3. Click "Analyze" and wait for AI results</p>
+                <p>4. Results will appear below with pricing recommendations</p>
+            </div>
+
+            <form id="appraisalForm">
+                <div class="form-group">
+                    <label>Product Photos (1-5 images)</label>
+                    <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                        <div class="photo-upload-icon">📸</div>
+                        <p style="font-size: 1.2em; font-weight: 600;">Click to upload photos</p>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 5px;">Clear, well-lit photos work best</p>
+                        <input type="file" id="photoInput" accept="image/*" multiple required>
+                    </div>
+                    <div class="photo-preview" id="photoPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="productName">Product Name (Optional)</label>
+                    <input type="text" id="productName" placeholder="e.g., Vintage Camera, Digital Art Pack">
+                </div>
+
+                <div class="form-group">
+                    <label for="additionalInfo">Additional Details (Optional)</label>
+                    <textarea id="additionalInfo" placeholder="Condition, age, brand, unique features, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    🔍 Analyze Product
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="font-size: 1.1em; font-weight: 600; color: #667eea;">AI is analyzing your product...</p>
+                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">This usually takes 10-20 seconds</p>
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    ✗ Analysis failed. Make sure Make.com scenario is set up correctly.
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Analysis Results</h2>
+            <div id="resultContainer">
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    <p>Upload product images above to get AI analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://hook.us2.make.com/vl1zkcwv8gcs3eesacm3jwajvy32x1ro';
+        let uploadedPhotos = [];
+        let pollInterval;
+
+        // Handle photo upload
+        document.getElementById('photoInput').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            const preview = document.getElementById('photoPreview');
+            
+            if (files.length > 5) {
+                alert('Maximum 5 photos allowed');
+                e.target.value = '';
+                return;
+            }
+
+            preview.innerHTML = '';
+            uploadedPhotos = [];
+
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedPhotos.push(event.target.result);
+                    const div = document.createElement('div');
+                    div.className = 'photo-preview-item';
+                    div.innerHTML = `
+                        <img src="${event.target.result}" alt="Product photo">
+                        <button class="remove-photo" onclick="removePhoto(${index})" type="button">×</button>
+                    `;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        window.removePhoto = function(index) {
+            uploadedPhotos.splice(index, 1);
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '';
+            
+            uploadedPhotos.forEach((photo, i) => {
+                const div = document.createElement('div');
+                div.className = 'photo-preview-item';
+                div.innerHTML = `
+                    <img src="${photo}" alt="Product photo">
+                    <button class="remove-photo" onclick="removePhoto(${i})" type="button">×</button>
+                `;
+                preview.appendChild(div);
+            });
+        };
+
+        // Handle form submission
+        document.getElementById('appraisalForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (uploadedPhotos.length === 0) {
+                alert('Please upload at least one photo');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMessage = document.getElementById('errorMessage');
+
+            submitBtn.disabled = true;
+            loading.classList.add('active');
+            errorMessage.classList.remove('active');
+            resultContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;"><p>Waiting for AI analysis...</p></div>';
+
+            const requestId = 'req_' + Date.now();
+
+            try {
+                const payload = {
+                    requestId: requestId,
+                    timestamp: new Date().toISOString(),
+                    productName: document.getElementById('productName').value || 'Not specified',
+                    additionalInfo: document.getElementById('additionalInfo').value || 'None',
+                    photos: uploadedPhotos
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Webhook request failed');
+                }
+
+                const result = await response.json();
+                
+                if (result && result.analysis) {
+                    displayResults(result.analysis);
+                } else {
+                    throw new Error('No analysis data received');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = '✗ ' + error.message + '. Check console for details.';
+                errorMessage.classList.add('active');
+                resultContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;"><p>Failed to get analysis</p></div>';
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+
+        function displayResults(analysis) {
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `
+                <div class="result active">
+                    <h3>📊 AI Analysis Complete</h3>
+                    
+                    <div class="result-section">
+                        <strong>Product Identified:</strong>
+                        <p>${analysis.productName || 'Unknown'}</p>
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Category:</strong>
+                        <p>${analysis.category || 'Not specified'}</p>
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Description:</strong>
+                        <p>${analysis.description || 'No description available'}</p>
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Condition Assessment:</strong>
+                        <p>${analysis.condition || 'Not assessed'}</p>
+                    </div>
+
+                    <div class="price-tag">
+                        💰 Recommended Price: $${analysis.recommendedPrice || '0.00'}
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Price Range:</strong>
+                        <p>$${analysis.priceRange || '0.00 - 0.00'}</p>
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Market Analysis:</strong>
+                        <p>${analysis.marketAnalysis || 'No market data available'}</p>
+                    </div>
+
+                    <div class="result-section">
+                        <strong>Pricing Reasoning:</strong>
+                        <p>${analysis.reasoning || 'No reasoning provided'}</p>
+                    </div>
+
+                    <div class="result-section" style="background: #f0f7ff; padding: 15px; border-radius: 8px;">
+                        <strong>💡 Gumroad Tips:</strong>
+                        <p>${analysis.gumroadTips || 'No specific tips available'}</p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
